@@ -499,6 +499,17 @@ theorem Vec.beq_lawful {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (
 instance {α n} [BEq α] [LawfulBEq α] : LawfulBEq (Vec α n) where
   eq_of_beq := Vec.beq_lawful
 
+theorem Vec.beq_iff_eq {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (beq v1 v2) = true ↔ v1 = v2
+| #(), #() => ⟨ fun h ↦ rfl , by simp ⟩
+| x::xs, y::ys => ⟨ fun h ↦ beq_lawful (v1 := x::xs) (v2 := y::ys) h, fun h ↦ by rw [h] ; exact beq_refl⟩
+
+theorem Vec.not_beq_imp_not_eq {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (beq v1 v2) = false → v1 ≠ v2
+| #(), #(), h => by simp at h
+| x::xs, y::ys, h => fun eq => by
+  have ih := not_beq_imp_not_eq (v1 := xs) (v2 := ys)
+  simp at h eq
+  exact ih (h eq.1) eq.2
+
 @[grind =]
 theorem Vec.beq_head_tail {α} [BEq α] : {n : Nat} → [NeZero n] → {v1 v2 : Vec α n} → v1.head == v2.head ∧ v1.tail == v2.tail ↔ v1 == v2
 | n + 1, _, x::xs, y::ys => by simp_all [BEq.beq]
@@ -659,5 +670,12 @@ theorem Vec.sequence_map {m α β n} [Applicative m] {f : α -> m β} :
 /-! ## Mem -/
 
 -- TODO
+
+/-! ## DecideableEq -/
+def Vec.has_dec_eq {α n} [DecidableEq α] : (a b : Vec α n) → Decidable (a = b)
+| v1, v2 => Or.by_cases (by simp) (.isTrue ∘ beq_lawful) (.isFalse ∘ not_beq_imp_not_eq)
+
+instance {α n} [DecidableEq α] : DecidableEq (Vec α n) := Vec.has_dec_eq
+
 
 end Lilac
