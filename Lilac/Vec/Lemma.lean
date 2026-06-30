@@ -676,10 +676,19 @@ theorem Vec.findIdx?_eq_some_iff_getElem {α} {p : α -> Bool} :
 
 /-! ## traverse -/
 
-theorem Vec.traverse_eq_pure_iff_getElem {m α β n v2} [i : Applicative m] {f : α → m β} :
-  {v1 : Vec α n} ->
-  v1.traverse f = pure v2 ->
-  ∀ i : Fin n, f v1[i] = pure (v2[i]) := sorry
+theorem Vec.traverse_eq_pure_iff_getElem {m α β} [Applicative m] {f : α → m β} :
+  {n : Nat} →
+  {v2 : Vec β n} →
+  {v1 : Vec α n} →
+  v1.traverse f = pure v2 →
+  ∀ i : Fin n, f v1[i] = pure (v2[i])
+| n + 1, x::xs, y::ys, eq, i => by
+  simp [traverse] at eq
+  induction i using Fin.cases
+  case zero =>
+    simp
+    sorry
+  case succ i' => sorry
 
 -- TODO
 
