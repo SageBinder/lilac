@@ -627,9 +627,42 @@ theorem Vec.any_set {α p} : {a : α} → {n : Nat} → {v : Vec α n} → {i : 
 
 /-! ## findIdx? -/
 
-theorem Vec.findIdx?_eq_some_iff_getElem {α n i} {v : Vec α n} {p : α -> Bool} :
-  findIdx? p v = some i <-> p v[i] ∧ ∀ (j : Fin n) (hji : j < i), ¬ p v[j] = true
-:= sorry
+-- This could certainly be golfed
+theorem Vec.findIdx?_eq_some_iff_getElem {α} {p : α -> Bool} :
+  {n : Nat} → {i : Fin n} → {v : Vec α n} → findIdx? p v = some i ↔ p v[i] ∧ ∀ (j : Fin n) (_ : j < i), ¬ p v[j] = true
+| 1, 0, x::#() => ⟨
+  fun h ↦ ⟨by simp_all [findIdx?, findIdx?.go], by grind⟩,
+  fun ⟨h1, h2⟩ ↦ by simp [findIdx?, findIdx?.go] ; exact h1⟩
+| n + 2, i, x::x'::xs =>
+  have proof1 h := by
+    induction i using Fin.cases
+    case zero => simp_all [findIdx?, findIdx?.go] ; grind
+    case succ i' =>
+      rw [findIdx?, findIdx?.go] at h
+      have not_px : p x = false := Or.by_cases (by simp : p x = true ∨ p x = false) (by grind) (by simp)
+      simp [not_px] at h
+      simp [((findIdx?_eq_some_iff_getElem (v := x'::xs) (i := i') (p := p)).mp (by simp [findIdx?, h])).1]
+  have proof2 h j j_le_i := by
+    induction i using Fin.cases
+    case zero => simp_all
+    case succ i' =>
+      rw [findIdx?, findIdx?.go] at h
+      have not_px : p x = false := Or.by_cases (by simp : p x = true ∨ p x = false) (by grind [Fin.ofNat]) (by simp)
+      simp [not_px] at h
+      induction j using Fin.cases
+      case zero => simp [not_px]
+      case succ j' => simp_all [((findIdx?_eq_some_iff_getElem (v := x'::xs) (i := i') (p := p)).mp h).2 j' (by grind)]
+  have proof3 := fun ⟨h1, h2⟩ ↦ by
+    induction i using Fin.cases
+    case zero => simp_all [findIdx?, findIdx?.go]
+    case succ i' _ =>
+      have not_px : p x = false := by have _ := h2 0 (by simp) ; simp_all
+      have ih :=
+        (findIdx?_eq_some_iff_getElem (v := x'::xs) (i := i') (p := p)).mpr ⟨
+          h1,
+          fun k _ ↦ by have _ := h2 k.succ (by grind) ; simp_all⟩
+      simp_all [findIdx?, findIdx?.go]
+  ⟨fun h ↦ ⟨proof1 h, proof2 h⟩, proof3⟩
 
 -- TODO
 
@@ -643,7 +676,7 @@ theorem Vec.findIdx?_eq_some_iff_getElem {α n i} {v : Vec α n} {p : α -> Bool
 
 /-! ## traverse -/
 
-theorem Vec.traverse_eq_pure_iff_getElem {m α β n v2} [i : Applicative m] {f : α -> m β} :
+theorem Vec.traverse_eq_pure_iff_getElem {m α β n v2} [i : Applicative m] {f : α → m β} :
   {v1 : Vec α n} ->
   v1.traverse f = pure v2 ->
   ∀ i : Fin n, f v1[i] = pure (v2[i]) := sorry
