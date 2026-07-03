@@ -678,19 +678,47 @@ theorem Vec.findIdx?_eq_some_iff_getElem {α} {p : α -> Bool} :
 -- TODO
 
 /-! ## traverse -/
+
+theorem Vec.traverse_eq_pure_iff_getElem_aux {m α β} [Applicative m] [LawfulApplicative m] {f : α → m β} :
+  {n : Nat} →
+  {y : β} → {ys : Vec β n} →
+  {x : α} → {xs : Vec α n} →
+  (x::xs).traverse f = pure (y::ys) ↔
+  f x = pure y ∧ xs.traverse f = pure ys
+| 0, y, #(), x, #() =>
+  have forward h := sorry
+  have backward := fun ⟨h1, h2⟩ ↦ sorry
+  ⟨forward, backward⟩
+| n + 1, y, ys, x, xs =>
+  have forward h := sorry
+  have backward := fun ⟨h1, h2⟩ ↦ sorry
+  ⟨forward, backward⟩
+
 theorem Vec.traverse_eq_pure_iff_getElem {m α β} [Applicative m] [LawfulApplicative m] {f : α → m β} :
   {n : Nat} →
   {v2 : Vec β n} →
   {v1 : Vec α n} →
   v1.traverse f = pure v2 ↔
   ∀ i : Fin n, f v1[i] = pure (v2[i])
-| 0, #(), #() =>
-  have forward := sorry
-  have backward := sorry
-  ⟨forward, backward⟩
-| n + 1, x::xs, y::ys =>
-  have forward := sorry
-  have backward := sorry
+| 0, #(), #() => by simp
+| n + 1, y::ys, x::xs =>
+  have forward eq i := by
+    induction i using Fin.cases
+    case zero => exact ((@traverse_eq_pure_iff_getElem_aux m α β _ _ f _ y ys x xs).mp eq).1
+    case succ i' =>
+      simp
+      have ih := @traverse_eq_pure_iff_getElem m _ _ _ _ f n ys xs
+      replace eq := ((@traverse_eq_pure_iff_getElem_aux m α β _ _ f _ y ys x xs).mp eq).2
+      exact ih.mp eq i'
+  have backward h := by
+    have ih := @traverse_eq_pure_iff_getElem m _ _ _ _ f n ys xs
+    apply traverse_eq_pure_iff_getElem_aux.mpr
+
+    have left : f x = pure y := h 0
+    have right : traverse f xs = pure ys := by
+      apply ih.mpr ; intro i
+      exact h i.succ
+    exact ⟨left, right⟩
   ⟨forward, backward⟩
 
 -- TODO
