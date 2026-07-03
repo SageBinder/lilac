@@ -373,9 +373,12 @@ theorem Vec.tail_append {α} : {n m : Nat} → [NeZero n] → {v1 : Vec α n} �
 /-! ## foldl -/
 
 @[simp]
-theorem Vec.foldl_assoc {α n} {op : α -> α -> α} [ha : Std.Associative op] {v : Vec α n} {a b : α}
-  : v.foldl op (op a b) = op a (v.foldl op b)
-:= sorry
+theorem Vec.foldl_assoc {α} {op : α -> α -> α} [ha : Std.Associative op] {a b : α}
+  : {n : Nat} → {v : Vec α n} → v.foldl op (op a b) = op a (v.foldl op b)
+| 0, #() => by simp
+| n + 1, x::xs => by
+  have ih := @foldl_assoc α op _ a (op b x) n xs
+  grind [foldl]
 
 -- TODO
 
@@ -675,18 +678,26 @@ theorem Vec.findIdx?_eq_some_iff_getElem {α} {p : α -> Bool} :
 -- TODO
 
 /-! ## traverse -/
-
-theorem Vec.traverse_eq_pure_iff_getElem {m α β} [Applicative m] {f : α → m β} :
+theorem Vec.traverse_eq_pure_iff_getElem {m α β} [Applicative m] [LawfulApplicative m] {f : α → m β} :
   {n : Nat} →
   {v2 : Vec β n} →
   {v1 : Vec α n} →
   v1.traverse f = pure v2 →
   ∀ i : Fin n, f v1[i] = pure (v2[i])
-| n + 1, x::xs, y::ys, eq, i => by
+| 1, x::#(), y::#(), eq, 0 => by
+  simp_all
+  have map_pure := @LawfulApplicative.map_pure m  _ _ β (Vec β (1)) (cons · #()) x
+  rw [← map_pure] at eq
+  rw [← pure_seq, ← pure_seq] at eq
+  sorry
+| n + 1 + 1, x::xs, y::ys, eq, i => by
   simp [traverse] at eq
   induction i using Fin.cases
   case zero =>
     simp
+    have ih := @traverse_eq_pure_iff_getElem m α β _ _ f (n + 1) xs ys
+
+
     sorry
   case succ i' => sorry
 
