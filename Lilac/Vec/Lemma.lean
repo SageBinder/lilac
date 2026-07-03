@@ -682,24 +682,16 @@ theorem Vec.traverse_eq_pure_iff_getElem {m α β} [Applicative m] [LawfulApplic
   {n : Nat} →
   {v2 : Vec β n} →
   {v1 : Vec α n} →
-  v1.traverse f = pure v2 →
+  v1.traverse f = pure v2 ↔
   ∀ i : Fin n, f v1[i] = pure (v2[i])
-| 1, x::#(), y::#(), eq, 0 => by
-  simp_all
-  have map_pure := @LawfulApplicative.map_pure m  _ _ β (Vec β (1)) (cons · #()) x
-  rw [← map_pure] at eq
-  rw [← pure_seq, ← pure_seq] at eq
-  sorry
-| n + 1 + 1, x::xs, y::ys, eq, i => by
-  simp [traverse] at eq
-  induction i using Fin.cases
-  case zero =>
-    simp
-    have ih := @traverse_eq_pure_iff_getElem m α β _ _ f (n + 1) xs ys
-
-
-    sorry
-  case succ i' => sorry
+| 0, #(), #() =>
+  have forward := sorry
+  have backward := sorry
+  ⟨forward, backward⟩
+| n + 1, x::xs, y::ys =>
+  have forward := sorry
+  have backward := sorry
+  ⟨forward, backward⟩
 
 -- TODO
 
