@@ -506,10 +506,10 @@ theorem Vec.beq_iff_eq {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (
 | #(), #() => ⟨ fun h ↦ rfl , by simp ⟩
 | x::xs, y::ys => ⟨ fun h ↦ beq_lawful (v1 := x::xs) (v2 := y::ys) h, fun h ↦ by rw [h] ; exact beq_refl⟩
 
-theorem Vec.not_beq_imp_not_eq {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (beq v1 v2) = false → v1 ≠ v2
+theorem Vec.nbeq_imp_neq {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (beq v1 v2) = false → v1 ≠ v2
 | #(), #(), h => by simp at h
 | x::xs, y::ys, h => fun eq => by
-  have ih := not_beq_imp_not_eq (v1 := xs) (v2 := ys)
+  have ih := nbeq_imp_neq (v1 := xs) (v2 := ys)
   simp at h eq
   exact ih (h eq.1) eq.2
 
@@ -704,7 +704,7 @@ theorem Vec.sequence_map {m α β n} [Applicative m] {f : α -> m β} :
 
 /-! ## DecideableEq -/
 def Vec.has_dec_eq {α n} [DecidableEq α] : (a b : Vec α n) → Decidable (a = b)
-| v1, v2 => Or.by_cases (by simp) (.isTrue ∘ beq_lawful) (.isFalse ∘ not_beq_imp_not_eq)
+| v1, v2 => Or.by_cases (by simp) (.isTrue ∘ beq_lawful) (.isFalse ∘ nbeq_imp_neq)
 
 instance {α n} [DecidableEq α] : DecidableEq (Vec α n) := Vec.has_dec_eq
 
